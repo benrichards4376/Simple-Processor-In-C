@@ -2,7 +2,7 @@
 
 void sltTwo(unsigned A, unsigned B, unsigned *result) { //slt twos complement
 														//convert a or b to positive if needed
-
+	// you are here
 	unsigned mask = 0x10000000;// mask
 	unsigned bitmask1 = A & mask; //check to see if A is negative 
 	unsigned bitmask2 = B & mask; //check to see if B is negative
