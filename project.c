@@ -1,44 +1,5 @@
 #include "spimcore.h"
 
-void sltTwo(unsigned A, unsigned B, unsigned *result) { //slt twos complement
-														//convert a or b to positive if needed
-	// you are here
-	// i am here
-	// Hi, I'm Brooke Lynn
-	unsigned mask = 0x10000000;// mask
-	unsigned bitmask1 = A & mask; //check to see if A is negative 
-	unsigned bitmask2 = B & mask; //check to see if B is negative
-
-	if (bitmask1 == 0x000000000 && bitmask2 == 0x00000000) { //both postive
-		if (A < B)
-			*result = 0x1; //yes: 1
-		else
-			*result = 0x0; //no: 0
-		return;
-	}
-
-	if (bitmask1 == 0x10000000 && bitmask2 == 0x00000000) { //A negative, B positive
-		*result = 0x1; //A is less than B
-		return;
-	}
-
-	if (bitmask1 == 0x00000000 && bitmask2 == 0x10000000) { //A positive, B negative
-		*result = 0x0; //A is not less than B
-		return;
-	}
-
-
-	if (bitmask1 == 0x10000000 && bitmask2 == 0x10000000) { //A negative, B positive
-		unsigned APos = (~A) + 1; //convert A to positive
-		unsigned BPos = (~B) + 1;  //convert B to positive
-
-		if (APos > BPos)
-			*result = 0x1; //yes
-		else
-			*result = 0x0; //no
-
-		return;
-	}
 
 }
 
@@ -46,49 +7,70 @@ void sltTwo(unsigned A, unsigned B, unsigned *result) { //slt twos complement
 /* 10 Points */
 void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 {
-	unsigned result; //temp result
+  unsigned int result = 0;
 
-	switch (ALUControl) {
-	case 0x0: //add case
-		result = A + B;
-		break;
-	case 0x1: // subtract case
-		result = A - B;
-		break;
-	case 0x2: //slt signed case (two'complemnt)
-		sltTwo(A, B, &result);
-		break;
-	case 0x3: //slt case unsigned
-		if (A < B)
-			result = 0x1; //yes: 1
-		else
-			result = 0x0; //no: 0
-		break;
-	case 0x4: //and case
-		result = A & B;
-		break;
-	case 0x5: //or case
-		result = A | B;
-		break;
-	case 0x6: //shift left B by 16 bits case //might need to put that into result for lui
-		result = B << 16;
-		break;
-	case 0x7: //not A case
-		result = ~A;
-		break;
-	}
+  // addition
+  if (ALUControl == 0)
+  {
+      result = A + B;
+  }
+  // subtraction
+  else if (ALUControl == 1)
+  {
+    result = A - B;
+  }
 
-	//if result is 0, then zero = 1, otherwise zero = 0
-	if (result == 0x0)
-		*Zero = 0x1; //assert
-	else
-		*Zero = 0x0; //deassert
+  else if (ALUControl == 2)
+  {
+    if ((int)A < (int)B)
+    {
+      result = 1;
+    }
+    else
+    {
+      result = 0;
+    }
+  }
+  else if (ALUControl == 3)
+  {
+    if (A < B)
+    {
+      result = 1;
+    }
+    else
+    {
+      result = 0;
+    }
+  }
+  else if (ALUControl == 4)
+  {
+    result = A & B;
+  }
+  else if (ALUControl == 5)
+  {
+    result = A | B;
+  }
+  else if (ALUControl == 6)
+  {
+    result = B << 16;
+  }
+  else if (ALUControl == 7)
+  {
+    result = ~A;
+  }
 
+  *ALUresult = result;
 
-	//assign result to ALUreslt
-	*ALUresult = result;
+  if (result == 0)
+  {
+    *Zero = 1;
+  }
+  else
+  {
+    *Zero = 0;
+  }
+
 }
-
 
 
 
