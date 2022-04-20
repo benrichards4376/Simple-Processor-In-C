@@ -1,8 +1,7 @@
 #include "spimcore.h"
 
 
-/* ALU */
-/* 10 Points */
+// ALU
 void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 {
   unsigned int result = 0;
@@ -18,6 +17,7 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
     result = A - B;
   }
 
+  // signed int comparison
   else if (ALUControl == 2)
   {
     if ((int)A < (int)B)
@@ -29,6 +29,8 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
       result = 0;
     }
   }
+  
+  // unsigned else if comparison
   else if (ALUControl == 3)
   {
     if (A < B)
@@ -40,18 +42,26 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
       result = 0;
     }
   }
+  
+  // bitwise "AND" operator
   else if (ALUControl == 4)
   {
     result = A & B;
   }
+  
+  // bitwise "OR" operator
   else if (ALUControl == 5)
   {
     result = A | B;
   }
+  
+  // bitwise "LEFT SHIFT" operator
   else if (ALUControl == 6)
   {
     result = B << 16;
   }
+  
+  // bitwise "NOT" operator
   else if (ALUControl == 7)
   {
     result = ~A;
@@ -68,58 +78,45 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
     *Zero = 0;
   }
 
-}
+} // end ALU function
 
-
-
-/* instruction fetch */
-/* 10 Points */
+// gets instruction from Mem and places in "instruction"
 int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 {
-  if (PC % 4 == 0)
+  if (PC % 4 == 0) // if there is nothing within the 4 bits
   {
-    *instruction = Mem[PC >> 2];
+    *instruction = Mem[PC >> 2]; // right shift PC by 2 to get the correct index for instruction within Mem
     return 0;
   }
   else
-	return 1;
+    return 1;
   	
-}
+} // end instruction fetch function
 
-
-/* instruction partition */
-/* 10 Points */
+// instruction partition
 void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsigned *r2, unsigned *r3, unsigned *funct, unsigned *offset, unsigned *jsec)
 {
-	//We don't know the specific instruction yet, so we partition every possible part
-	//need to bitmask with instruction to extract bits out 
-	
-	
-	//first lets create the mask : fieldM is the mask of that field
-	unsigned opM = 0xfc000000; //bit [31-26]
-	unsigned r1M = 0x03e00000; //bit [25-21]
-	unsigned r2M = 0x001f0000; //bit [20-16]
-	unsigned r3M = 0x0000f800; //bit [15-11]
-	unsigned functM = 0x0000003f; //bit [5-0]
-	unsigned offsetM = 0x0000ffff; //bit [15-0]
-	unsigned jsecM = 0x03ffffff; //bit [25-0]
+	// creating temporary bitmasks for each variable so we dont change the original values
+	unsigned opM = 0xfc000000; // difference (2^32 -1) - (2^26 - 1)
+	unsigned r1M = 0x03e00000; // difference (2^26 - 1) - (2^21 - 1)
+	unsigned r2M = 0x001f0000; // difference (2^21 -1) - (2^16 - 1)
+	unsigned r3M = 0x0000f800; // difference (2^16 -1) - (2^11 - 1)
+	unsigned functM = 0x0000003f; // difference (2^6 -1) - (2^0 - 1)
+	unsigned offsetM = 0x0000ffff; // difference (2^16 -1) - (2^0 - 1)
+	unsigned jsecM = 0x03ffffff; // difference (2^26 -1) - (2^0 - 1)
 
-
-	//we bitmask here to extract bits
+	
 	*op = instruction & opM; //opcode
-	*r1 = (instruction & r1M) >> 21; //register 1
-	*r2 = (instruction & r2M) >> 16; //register 2
-	*r3 = (instruction & r3M) >> 11; //register 3
-	*funct = instruction & functM; //function field
-	*offset = instruction & offsetM; //offset field
-	*jsec = instruction & jsecM; // jump address field
+	*r1 = (instruction & r1M) >> 21;
+	*r2 = (instruction & r2M) >> 16;
+	*r3 = (instruction & r3M) >> 11;
+	*funct = instruction & functM;
+	*offset = instruction & offsetM;
+	*jsec = instruction & jsecM;
 
 }
 
-
-
-/* instruction decode */
-/* 15 Points */
+// instruction decode
 int instruction_decode(unsigned op,struct_controls *controls)
 {
 	//use op to assign control signals
