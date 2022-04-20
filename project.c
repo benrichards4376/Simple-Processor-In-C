@@ -76,20 +76,9 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 /* 10 Points */
 int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 {
-	//test for word alignment
-	if ((PC % 4) != 0) {
-		return 1;//halt the program PC is not word alligned
-	}
+	*instruction = PC[Mem / 4]
+  	return 0;
 	
-
-	//check ranges of PC
-	if (PC < 0x0000 || PC > 0xFFFF) {
-		return 1; //halt the program, PC not in range
-	}
-
-	//get instruction from memory
-	*instruction = Mem[PC >> 2];
-	return 0; //don't halt
 }
 
 
