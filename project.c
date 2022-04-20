@@ -78,15 +78,12 @@ int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 {
   if (PC % 4 == 0)
   {
-    *instruction = PC[Mem >> 2];
+    *instruction = Mem[PC >> 2];
     return 0;
   }
   else
-  {
-    return 1;
-  }
-
-	
+	return 1;
+  	
 }
 
 
@@ -94,13 +91,28 @@ int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 /* 10 Points */
 void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsigned *r2, unsigned *r3, unsigned *funct, unsigned *offset, unsigned *jsec)
 {
-	*op     = (instruction & 0xfc000000) >> 26;
-  	*r1     = (instruction & 0x03e00000) >> 21;
-  	*r2     = (instruction & 0x001f0000) >> 16;
-  	*r3     = (instruction & 0x0000f800) >> 11;
-  	*funct  =  instruction & 0x0000003f;
-  	*offset =  instruction & 0x0000ffff;
-  	*jsec   =  instruction & 0x03ffffff;
+	//We don't know the specific instruction yet, so we partition every possible part
+	//need to bitmask with instruction to extract bits out 
+	
+	
+	//first lets create the mask : fieldM is the mask of that field
+	unsigned opM = 0xfc000000; //bit [31-26]
+	unsigned r1M = 0x03e00000; //bit [25-21]
+	unsigned r2M = 0x001f0000; //bit [20-16]
+	unsigned r3M = 0x0000f800; //bit [15-11]
+	unsigned functM = 0x0000003f; //bit [5-0]
+	unsigned offsetM = 0x0000ffff; //bit [15-0]
+	unsigned jsecM = 0x03ffffff; //bit [25-0]
+
+
+	//we bitmask here to extract bits
+	*op = instruction & opM; //opcode
+	*r1 = (instruction & r1M) >> 21; //register 1
+	*r2 = (instruction & r2M) >> 16; //register 2
+	*r3 = (instruction & r3M) >> 11; //register 3
+	*funct = instruction & functM; //function field
+	*offset = instruction & offsetM; //offset field
+	*jsec = instruction & jsecM; // jump address field
 
 }
 
