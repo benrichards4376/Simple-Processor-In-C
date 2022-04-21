@@ -1,20 +1,29 @@
+/*
+AUTHORS:
+Anthony Arronte Lugo
+Brooklyn Butner
+Benjamin Richards
+Kennedy Torrent
+*/
+
 #include "spimcore.h"
 
 
-// ALU
+/* ALU */
+/* 10 Points */
 void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 {
-  unsigned int result = 0;
+  unsigned int Z = 0;
 
-  // addition
+   //addition
   if (ALUControl == 0)
   {
-      result = A + B;
+      Z = A + B;
   }
   // subtraction
   else if (ALUControl == 1)
   {
-    result = A - B;
+    Z = A - B;
   }
 
   // signed int comparison
@@ -22,54 +31,54 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
   {
     if ((int)A < (int)B)
     {
-      result = 1;
+      Z = 1;
     }
     else
     {
-      result = 0;
+      Z = 0;
     }
   }
-  
+
   // unsigned else if comparison
   else if (ALUControl == 3)
   {
     if (A < B)
     {
-      result = 1;
+      Z = 1;
     }
     else
     {
-      result = 0;
+      Z = 0;
     }
   }
-  
+
   // bitwise "AND" operator
   else if (ALUControl == 4)
   {
-    result = A & B;
+    Z = A & B;
   }
-  
+
   // bitwise "OR" operator
   else if (ALUControl == 5)
   {
-    result = A | B;
+    Z = A | B;
   }
-  
+
   // bitwise "LEFT SHIFT" operator
   else if (ALUControl == 6)
   {
-    result = B << 16;
+    Z = B << 16;
   }
-  
+
   // bitwise "NOT" operator
   else if (ALUControl == 7)
   {
-    result = ~A;
+    Z = ~A;
   }
 
-  *ALUresult = result;
+  *ALUresult = Z;
 
-  if (result == 0)
+  if (Z == 0)
   {
     *Zero = 1;
   }
@@ -80,6 +89,8 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 
 } // end ALU function
 
+/* instruction fetch */
+/* 10 Points */
 // gets instruction from Mem and places in "instruction"
 int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 {
@@ -90,142 +101,143 @@ int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
   }
   else
     return 1;
-  	
+
 } // end instruction fetch function
 
-// instruction partition
-void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsigned *r2, unsigned *r3, unsigned *funct, unsigned *offset, unsigned *jsec)
+/* instruction partition */
+/* 10 Points */
+void instruction_partition(unsigned int instruction, unsigned int* op, unsigned int* r1,unsigned int* r2, unsigned int* r3, unsigned int* funct, unsigned int* offset, unsigned int* jsec)
 {
 	// creating temporary bitmasks for each variable so we dont change the original values
-	unsigned opM = 0xfc000000; // difference (2^32 -1) - (2^26 - 1)
-	unsigned r1M = 0x03e00000; // difference (2^26 - 1) - (2^21 - 1)
-	unsigned r2M = 0x001f0000; // difference (2^21 -1) - (2^16 - 1)
-	unsigned r3M = 0x0000f800; // difference (2^16 -1) - (2^11 - 1)
-	unsigned functM = 0x0000003f; // difference (2^6 -1) - (2^0 - 1)
-	unsigned offsetM = 0x0000ffff; // difference (2^16 -1) - (2^0 - 1)
-	unsigned jsecM = 0x03ffffff; // difference (2^26 -1) - (2^0 - 1)
+	unsigned int opTemp = 0xfc000000; // difference (2^32 -1) - (2^26 - 1)
+	unsigned int r1Temp = 0x03e00000; // difference (2^26 - 1) - (2^21 - 1)
+	unsigned int r2Temp = 0x001f0000; // difference (2^21 -1) - (2^16 - 1)
+	unsigned int r3Temp = 0x0000f800; // difference (2^16 -1) - (2^11 - 1)
+	unsigned int functTemp = 0x0000003f; // difference (2^6 -1) - (2^0 - 1)
+	unsigned int offsetTemp = 0x0000ffff; // difference (2^16 -1) - (2^0 - 1)
+	unsigned int jsecTemp = 0x03ffffff; // difference (2^26 -1) - (2^0 - 1)
 
-	
-	*op = instruction & opM; //opcode
-	*r1 = (instruction & r1M) >> 21;
-	*r2 = (instruction & r2M) >> 16;
-	*r3 = (instruction & r3M) >> 11;
-	*funct = instruction & functM;
-	*offset = instruction & offsetM;
-	*jsec = instruction & jsecM;
+
+	*op = instruction & opTemp; //opcode
+	*r1 = (instruction & r1Temp) >> 21;
+	*r2 = (instruction & r2Temp) >> 16;
+	*r3 = (instruction & r3Temp) >> 11;
+	*funct = instruction & functTemp;
+	*offset = instruction & offsetTemp;
+	*jsec = instruction & jsecTemp;
 
 }
 
-// instruction decode
-int instruction_decode(unsigned op,struct_controls *controls)
+/* instruction decode */
+/* 15 Points */
+int instruction_decode(unsigned int op,struct_controls *controls)
 {
-	//use op to assign control signals
 
 	switch (op) {
-	case 0x000000000 : //r-type instruction (add, sub, or, and, slt, sltu)
-		controls->RegDst = 0x1; //want to write to register in bit 15-11
-		controls->Jump = 0x0; //not jumping
-		controls->Branch = 0x0; //not branching
-		controls->MemRead = 0x0; //not reading memory
-		controls->MemtoReg = 0x0; //want alu output to go to write data register
-		controls->ALUOp = 0x7; //don't know yet, look at our funct bit 5-0
-		controls->MemWrite = 0x0; //not writing to memory
-		controls->ALUSrc = 0x0; //read data 2 to alu
-		controls->RegWrite = 0x1; //write data to register
+	case 0x000000000 :
+		controls->RegDst = 0x1;
+		controls->Jump = 0x0;
+		controls->Branch = 0x0;
+		controls->MemRead = 0x0;
+		controls->MemtoReg = 0x0;
+		controls->ALUOp = 0x7;
+		controls->MemWrite = 0x0;
+		controls->ALUSrc = 0x0;
+		controls->RegWrite = 0x1;
 		break;
-	case 0x20000000: //i-type (addi)
-		controls->RegDst = 0x0; //want to write to register in bit 20-16
-		controls->Jump = 0x0; //not jumping
-		controls->Branch = 0x0; //not branching
-		controls->MemRead = 0x0; //not reading memory
-		controls->MemtoReg = 0x0; //want alu output to go to write data register
-		controls->ALUOp = 0x0; //add for alu
-		controls->MemWrite = 0x0; //not writing to memory
-		controls->ALUSrc = 0x1; //read data 2 to alu
-		controls->RegWrite = 0x1; //write data to register
+	case 0x20000000:
+		controls->RegDst = 0x0;
+		controls->Jump = 0x0;
+		controls->Branch = 0x0;
+		controls->MemRead = 0x0;
+		controls->MemtoReg = 0x0;
+		controls->ALUOp = 0x0;
+		controls->MemWrite = 0x0;
+		controls->ALUSrc = 0x1;
+		controls->RegWrite = 0x1;
 		break;
-	case 0x8c000000: //i-type (load word)
-		controls->RegDst = 0x0; //want to write to register in bit 20-16
-		controls->Jump = 0x0; //not jumping
-		controls->Branch = 0x0; //not branching
-		controls->MemRead = 0x1; //reading memory
-		controls->MemtoReg = 0x1; //want memory output to go to write data register
-		controls->ALUOp = 0x0; //add register address with offset
-		controls->MemWrite = 0x0; //not writing to memory
-		controls->ALUSrc = 0x1; //send off set to alu
-		controls->RegWrite = 0x1; //write data to register
+	case 0x8c000000:
+		controls->RegDst = 0x0;
+		controls->Jump = 0x0;
+		controls->Branch = 0x0;
+		controls->MemRead = 0x1;
+		controls->MemtoReg = 0x1;
+		controls->ALUOp = 0x0;
+		controls->MemWrite = 0x0;
+		controls->ALUSrc = 0x1;
+		controls->RegWrite = 0x1;
 		break;
-	case 0xac000000: //i-type (store word)
-		controls->RegDst = 0x0; //want to write to register in bit 20-16
-		controls->Jump = 0x0; //not jumping
-		controls->Branch = 0x0; //not branching
-		controls->MemRead = 0x0; //not reading memory
-		controls->MemtoReg = 0x0; //don't want memory output to go to write data register
-		controls->ALUOp = 0x0; //add register address with offset
-		controls->MemWrite = 0x1; //writing to memory
-		controls->ALUSrc = 0x1; //send off set to alu
-		controls->RegWrite = 0x0; //don't write data to register
+	case 0xac000000:
+		controls->RegDst = 0x0;
+		controls->Jump = 0x0;
+		controls->Branch = 0x0;
+		controls->MemRead = 0x0;
+		controls->MemtoReg = 0x0;
+		controls->ALUOp = 0x0;
+		controls->MemWrite = 0x1;
+		controls->ALUSrc = 0x1;
+		controls->RegWrite = 0x0;
 		break;
-	case 0x3c000000: //i-type (load upper immediate
-		controls->RegDst = 0x0; //want to write to register in bit 20-16
-		controls->Jump = 0x0; //not jumping
-		controls->Branch = 0x0; //not branching
-		controls->MemRead = 0x0; //reading memory
-		controls->MemtoReg = 0x0; //want alu output to go to write data register
-		controls->ALUOp = 0x6; //shift offset 16 places to the left
-		controls->MemWrite = 0x0; //not writing to memory
-		controls->ALUSrc = 0x1; //send off set to alu
-		controls->RegWrite = 0x1; //write data to register
+	case 0x3c000000:
+		controls->RegDst = 0x0;
+		controls->Jump = 0x0;
+		controls->Branch = 0x0;
+		controls->MemRead = 0x0;
+		controls->MemtoReg = 0x0;
+		controls->ALUOp = 0x6;
+		controls->MemWrite = 0x0;
+		controls->ALUSrc = 0x1;
+		controls->RegWrite = 0x1;
 		break;
-	case 0x28000000: //(i-type) set less than immediate
-		controls->RegDst = 0x0; //want to write to register in bit 20-16
-		controls->Jump = 0x0; //not jumping
-		controls->Branch = 0x0; //not branching
-		controls->MemRead = 0x0; //not reading memory
-		controls->MemtoReg = 0x0; //want alu output to go to write data register
-		controls->ALUOp = 0x2; //slt
-		controls->MemWrite = 0x0; //not writing to memory
-		controls->ALUSrc = 0x1; //send offset to alu
-		controls->RegWrite = 0x1; //write data to register
+	case 0x28000000:
+		controls->RegDst = 0x0;
+		controls->Jump = 0x0;
+		controls->Branch = 0x0;
+		controls->MemRead = 0x0;
+		controls->MemtoReg = 0x0;
+		controls->ALUOp = 0x2;
+		controls->MemWrite = 0x0;
+		controls->ALUSrc = 0x1;
+		controls->RegWrite = 0x1;
 		break;
-	case 0x2c000000: //i-type set less than immediate unsigned
-		controls->RegDst = 0x0; //want to write to register in bit 20-16
-		controls->Jump = 0x0; //not jumping
-		controls->Branch = 0x0; //not branching
-		controls->MemRead = 0x0; //not reading memory
-		controls->MemtoReg = 0x0; //want alu output to go to write data register
-		controls->ALUOp = 0x3; //sltu
-		controls->MemWrite = 0x0; //not writing to memory
-		controls->ALUSrc = 0x1; //send offset to alu
-		controls->RegWrite = 0x1; //write data to register
+	case 0x2c000000:
+		controls->RegDst = 0x0;
+		controls->Jump = 0x0;
+		controls->Branch = 0x0;
+		controls->MemRead = 0x0;
+		controls->MemtoReg = 0x0;
+		controls->ALUOp = 0x3;
+		controls->MemWrite = 0x0;
+		controls->ALUSrc = 0x1;
+		controls->RegWrite = 0x1;
 		break;
-	case 0x10000000://branch on equal
-		controls->RegDst = 0x0; //not writing to register don't care
-		controls->Jump = 0x0; //not jumping
-		controls->Branch = 0x1; // branching
-		controls->MemRead = 0x0; //not reading memory
-		controls->MemtoReg = 0x0; //want alu output to go to write data register (don't care)
-		controls->ALUOp = 0x1; //subtract
-		controls->MemWrite = 0x0; //not writing to memory
-		controls->ALUSrc = 0x0; //send data 2 to alu
-		controls->RegWrite = 0x0; //don't write data to register
+	case 0x10000000:
+		controls->RegDst = 0x0;
+		controls->Jump = 0x0;
+		controls->Branch = 0x1;
+		controls->MemRead = 0x0;
+		controls->MemtoReg = 0x0;
+		controls->ALUOp = 0x1;
+		controls->MemWrite = 0x0;
+		controls->ALUSrc = 0x0;
+		controls->RegWrite = 0x0;
 		break;
-	case 0x08000000: //jump
-		controls->RegDst = 0x0; //dc
-		controls->Jump = 0x1; // jumping
-		controls->Branch = 0x0; //not branching
-		controls->MemRead = 0x0; //not reading memory
-		controls->MemtoReg = 0x0; //dc
-		controls->ALUOp = 0x0; //add
-		controls->MemWrite = 0x0; //not writing to memory
-		controls->ALUSrc = 0x0; //dc
-		controls->RegWrite = 0x0; //dont't write data to register
+	case 0x08000000:
+		controls->RegDst = 0x0;
+		controls->Jump = 0x1;
+		controls->Branch = 0x0;
+		controls->MemRead = 0x0;
+		controls->MemtoReg = 0x0;
+		controls->ALUOp = 0x0;
+		controls->MemWrite = 0x0;
+		controls->ALUSrc = 0x0;
+		controls->RegWrite = 0x0;
 		break;
-	default: //no other case must halt
-		return 1; //halt 
+	default:
+		return 1;
 	}
 
-	return 0; //don't halt
+	return 0;
 }
 
 /* Read Register */
@@ -241,144 +253,149 @@ void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigne
 /* 10 Points */
 void sign_extend(unsigned offset,unsigned *extended_value)
 {
-	//check to see if offset is a negative number 
-	unsigned mask1 = 0x00008000; // mask to check sign
-	unsigned mask2 = 0xffff0000; //mask to add 1 to first 16 bits
-	unsigned result = offset & mask1; // bit mask to see the 16th bit
-	if (result > 1) { //have a negative number 
-		*extended_value = offset | mask2; //put 1 in the first 16 bits
+
+	unsigned int temp1 = 0x00008000;
+	unsigned int temp2 = 0xffff0000;
+	unsigned int result = offset & temp1;
+	if (result > 1)
+  {
+		*extended_value = offset | temp2;
 	}
-	if (result == 0) { //have a positive number
-		*extended_value = offset; //put 0 in the first 16 bits
+
+	if (result == 0)
+  {
+		*extended_value = offset;
 	}
 }
 
 
-int rType_Decode(unsigned data1, unsigned data2, unsigned funct, unsigned *ALUresult, char *Zero) {
-	//decode a r-type using funct
 
-	switch (funct) {
-	case 0x20: //add
-		ALU(data1, data2, 0, ALUresult, Zero);
-		break;
-	case 0x22: //subtrat
-		ALU(data1, data2, 1, ALUresult, Zero);
-		break;
-	case 0x25: //or
-		ALU(data1, data2, 5, ALUresult, Zero);
-		break;
-	case 0x24: //and
-		ALU(data1, data2, 4, ALUresult, Zero);
-		break;
-	case 0x2A: //slt
-		ALU(data1, data2, 2, ALUresult, Zero);
-		break;
-	case 0x2B: //sltu
-		ALU(data1, data2, 3, ALUresult, Zero);
-		break;
-	default:
-		return 1; //halt function is not recognized
-	}
+int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
+{
+
+	if(ALUOp == 0)
+  {
+    if (ALUSrc == 1)
+			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+		else
+			ALU(data1, data2, ALUOp, ALUresult, Zero);
+  }
+
+	else if(ALUOp == 1)
+  {
+    if (ALUSrc == 1)
+			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+		else
+			ALU(data1, data2, ALUOp, ALUresult, Zero);
+  }
+
+	else if(ALUOp == 2)
+  {
+    if (ALUSrc == 1)
+    ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+  else
+    ALU(data1, data2, ALUOp, ALUresult, Zero);
+  }
+
+	else if(ALUOp == 3)
+  {
+    if (ALUSrc == 1)
+			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+		else
+			ALU(data1, data2, ALUOp, ALUresult, Zero);
+
+  }
+
+	else if(ALUOp == 4)
+  {
+    if (ALUSrc == 1)
+			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+		else
+			ALU(data1, data2, ALUOp, ALUresult, Zero);
+  }
+
+
+  else if(ALUOp == 5)
+  {
+    if (ALUSrc == 1)
+      ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+    else
+      ALU(data1, data2, ALUOp, ALUresult, Zero);
+
+  }
+
+  else if(ALUOp == 6)
+  {
+    if (ALUSrc == 1)
+      ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+    else
+      ALU(data1, data2, ALUOp, ALUresult, Zero);
+  }
+
+
+	else if (ALUOp == 7)
+  {
+    if (funct == 32)
+    {
+      ALU(data1, data2, 0, ALUresult, Zero);
+    }
+
+    else if(funct == 34)
+    {
+      ALU(data1, data2, 1, ALUresult, Zero);
+    }
+
+    else if(funct == 36)
+    {
+      ALU(data1, data2, 4, ALUresult, Zero);
+    }
+
+    else if(funct == 37)
+    {
+      ALU(data1, data2, 5, ALUresult, Zero);
+    }
+
+    else if(funct == 42)
+    {
+      ALU(data1, data2, 2, ALUresult, Zero);
+    }
+
+    else if(funct == 43)
+    {
+      ALU(data1, data2, 3, ALUresult, Zero);
+    }
+
+
+  }
+
+	else
+  {
+    return 1;
+  }
 
 	return 0;
 }
 
-/* ALU operations */
-/* 10 Points */
-int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
-{
-	//look up alu op
-	switch (ALUOp) {
 
-	case 0x0: //alu will do addition
-		if (ALUSrc == 1)//send extended value
-			ALU(data1, extended_value, ALUOp, ALUresult, Zero); 
-		else //send data 2
-			ALU(data1, data2, ALUOp, ALUresult, Zero);
-		
-		break;
-	case 0x1: //alu will do subtraction
-		if (ALUSrc == 1)//send extended value
-			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
-		else //send data 2
-			ALU(data1, data2, ALUOp, ALUresult, Zero);
-		
-		break;
-	case 0x2: //alu will do slt
-		if (ALUSrc == 1)//send extended value
-			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
-		else //send data 2
-			ALU(data1, data2, ALUOp, ALUresult, Zero);
-		
-		break;
-	case 0x3: //alu will do sltu
-		if (ALUSrc == 1)//send extended value
-			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
-		else //send data 2
-			ALU(data1, data2, ALUOp, ALUresult, Zero);
-		
-		break;
-	case 0x4: //alu wll do AND
-		if (ALUSrc == 1)//send extended value
-			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
-		else //send data 2
-			ALU(data1, data2, ALUOp, ALUresult, Zero);
-		
-		break;
-	case 0x5: //alu will do OR
-		if (ALUSrc == 1)//send extended value
-			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
-		else //send data 2
-			ALU(data1, data2, ALUOp, ALUresult, Zero);
-		
-		break;
-	case 0x6: //alu will SLL extendedvalue
-		if (ALUSrc == 1)//send extended value
-			ALU(data1, extended_value, ALUOp, ALUresult, Zero);
-		else //send data 2
-			ALU(data1, data2, ALUOp, ALUresult, Zero);
-
-		break;
-	case 0x7: //alu will do an r-type instruction
-		return rType_Decode(data1, data2, funct, ALUresult, Zero);
-
-		break;
-	default:
-		return 1; //halt the program aluop not recognized
-	}
-
-	return 0; //don't halt
-
-}
-
-
-
-/* Read / Write Memory */
-/* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
 
-	//check to see if aluresult is a valid address (only when it is a address)
-	if (MemRead == 0x1 || MemWrite == 0x1) {//we are reading or storing
-		//address is not word alligned
-		if ((ALUresult % 4) != 0) 
-			return 1; //halt
+	if (MemRead == 1 || MemWrite == 1)
+  {
+		if ((ALUresult % 4) != 0)
+			return 1;
 
-		//check ranges of PC
-		if (ALUresult < 0x0000 || ALUresult > 0xFFFF)
-			return 1; //halt the program, address not in range
+		if (ALUresult < 0 || ALUresult > 0xFFFF)
+			return 1;
 	}
 
-
-
-	//load word into memory
-	if (MemRead == 0x1 && MemWrite == 0x0) {
+	if (MemRead == 1 && MemWrite == 0)
+  {
 		*memdata = Mem[ALUresult >> 2];
 	}
 
-
-	//store word into memory
-	if (MemRead == 0x0 && MemWrite == 0x1) {
+	if (MemRead == 0 && MemWrite == 1)
+  {
 		Mem[ALUresult >> 2] = data2;
 	}
 
@@ -387,57 +404,58 @@ int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsig
 }
 
 
-/* Write Register */
-/* 10 Points */
+
 void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,char RegWrite,char RegDst,char MemtoReg,unsigned *Reg)
 {
-	//r-type write to register 3
-	if (RegDst == 0x1 && MemtoReg == 0x0 && RegWrite == 0x1) {
-		if (r3 == 0) //can't write to reg0
+
+	if (RegDst == 1 && MemtoReg == 0 && RegWrite == 1)
+  {
+		if (r3 == 0)
 			return;
-		
-		Reg[r3] = ALUresult; //r-types get aluresult in reg3
+
+		Reg[r3] = ALUresult;
 		return;
 	}
 
-	//load word, write to register 2
-	if (RegDst == 0x0 && MemtoReg == 0x1 && RegWrite == 0x1) {
-		if (r2 == 0) //can't write to reg0
+
+	if (RegDst == 0 && MemtoReg == 1 && RegWrite == 1)
+  {
+		if (r2 == 0)
 			return;
 
-		Reg[r2] = memdata; //lw gets memdata in reg2
+		Reg[r2] = memdata;
 		return;
 	}
 
-	//addi, lui, slti, sltui, write to register 2
-	if (RegDst == 0x0 && MemtoReg == 0x0 && RegWrite == 0x1) {
-		if (r2 == 0) //can't write to reg0
+
+	if (RegDst == 0 && MemtoReg == 0 && RegWrite == 1)
+  {
+		if (r2 == 0)
 			return;
 
-		Reg[r2] = ALUresult; //lw gets ALU result in reg2
+		Reg[r2] = ALUresult;
 		return;
 	}
+
 }
 
-/* PC update */
-/* 10 Points */
 void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char Zero,unsigned *PC)
 {
-	//next instruction
-	if (Branch == 0x0 && Jump == 0x0) {
-		*PC = *PC + 4; //go to next instruction
+
+	if (Branch == 0 && Jump == 0) {
+		*PC = *PC + 4;
 	}
 
-	//branch on equal
-	if (Branch == 0x1 && Jump == 0x0 && Zero == 0x1) {
-		*PC = (extended_value << 2) + (*PC + 4); //multiple extended_value by 4 nd add to pc + 4
+
+	if (Branch == 1 && Jump == 0 && Zero == 1) {
+		*PC = (extended_value << 2) + (*PC + 4);
 	}
 
-	//jump
-	if (Branch == 0x0 && Jump == 0x1) {
-		unsigned jsecShift = jsec << 2; //shift jsec to the left 2 bits
-		unsigned PC4Bits = (*PC + 4) & 0xF0000000; //bitmask to get PC + 4 first 4 bits
-		*PC = PC4Bits | jsecShift; //combine the 4 bits if pc with the 28 bit jsec
+
+	if (Branch == 0 && Jump == 1) {
+		unsigned int jsecLeftShift = jsec << 2;
+		unsigned int PC4Bits = (*PC + 4) & 0xF0000000;
+		*PC = PC4Bits | jsecLeftShift;
 	}
 
 }
